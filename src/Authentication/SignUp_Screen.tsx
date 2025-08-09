@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { supabase } from './supabaseconfig';
-import { isValidSouthAfricanID } from './Utilities/validateID';
 import logo from '../assets/images/logopng.png';
 
 interface FormData {
@@ -37,7 +35,7 @@ function SignUpScreen() {
     if (!name || !surname || !idNumber || !phone || !password || !confirmPassword)
       return 'Please fill in all fields.';
     if (!/^\d{13}$/.test(idNumber)) return 'ID Number must be 13 digits.';
-    // if (!isValidSouthAfricanID(idNumber)) return 'Invalid South African ID Number.';
+    // Add more validation if needed
     if (!/^\+?\d{10,15}$/.test(phone)) return 'Invalid phone number.';
     if (password.length < 8) return 'Password must be at least 8 characters.';
     if (password !== confirmPassword) return 'Passwords do not match.';
@@ -46,7 +44,6 @@ function SignUpScreen() {
 
   const handleRegister = async () => {
     setError('');
-
     const formError = validateForm();
     if (formError) {
       setError(formError);
@@ -55,47 +52,23 @@ function SignUpScreen() {
 
     setLoading(true);
     try {
-      // Fix: add quotes around ID in the or filter
-      const idNumber = form.idNumber;
-      const orFilter = `national_id_no.eq."${idNumber}",passport_no.eq."${idNumber}"`;
-
-      // 1. Check citizen exists
-      const { data: citizenData, error: citizenError } = await supabase
-        .from('citizens')
-        .select('citizen_id, first_name, last_name')
-        .or(orFilter)
-        .single();
-
-      console.log('Citizen Error:', citizenError);
-      console.log('Citizen Data:', citizenData);
-
-      if (citizenError || !citizenData) {
-        throw new Error('No matching record found in government database.');
-      }
-
-      // 2. Create fake email for Supabase Auth
-      const fakeEmail = `user${form.idNumber}@example.com`;
-
-      // 3. Sign up in Supabase Auth
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: fakeEmail.trim(),
-        password: form.password.trim(),
-        phone: form.phone.trim(),
+      const response = await fetch('https://your-backend-domain.com/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: form.name,
+          surname: form.surname,
+          idNumber: form.idNumber,
+          phone: form.phone,
+          password: form.password,
+        }),
       });
 
-      if (signUpError) throw signUpError;
+      const data = await response.json();
 
-      // 4. Insert into custom users table
-      const { error: dbError } = await supabase
-        .from('users')
-        .insert({
-          user_id: authData.user?.id,
-          citizen_id: citizenData.citizen_id,
-          email: fakeEmail,
-          phone: form.phone,
-        });
-
-      if (dbError && dbError.code !== '23505') throw dbError; // Ignore duplicate key
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed.');
+      }
 
       navigate('/login');
     } catch (err: any) {

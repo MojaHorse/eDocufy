@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { supabase } from './supabaseconfig';
-import { isValidSouthAfricanID } from './Utilities/validateID';
 import logo from '../assets/images/logopng.png';
 
 function LoginScreen() {
@@ -19,7 +17,7 @@ function LoginScreen() {
     const { idNumber, password } = form;
     if (!idNumber || !password) return 'Please fill in all fields.';
     if (!/^\d{13}$/.test(idNumber)) return 'ID must be 13 digits.';
-    if (!isValidSouthAfricanID(idNumber)) return 'Invalid South African ID.';
+    // Add more validation if needed
     return null;
   };
 
@@ -32,28 +30,33 @@ function LoginScreen() {
 
     setLoading(true);
     try {
-      const fakeEmail = `user${form.idNumber}@example.com`;
-
-      const { data, error: supabaseError } = await supabase.auth.signInWithPassword({
-        email: fakeEmail,
-        password: form.password,
+      const response = await fetch('https://your-backend-domain.com/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          idNumber: form.idNumber,
+          password: form.password,
+        }),
       });
 
-      if (supabaseError) throw supabaseError;
+      const data = await response.json();
 
-      // Store JWT in localStorage for now
-      if (data.session?.access_token) {
-        localStorage.setItem('access_token', data.session.access_token);
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed.');
       }
 
-      navigate('/home');
+      // Save token/session to localStorage (adjust if backend returns JWT or session token)
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+
+      navigate('/home'); // or dashboard or wherever
     } catch (err: any) {
       setError(err.message || 'Login failed. Check ID and password.');
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
     <div className="flex h-screen w-full font-sans overflow-hidden">
