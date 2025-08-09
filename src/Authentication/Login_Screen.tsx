@@ -46,8 +46,8 @@ function LoginScreen() {
       }
 
       // Save token/session to localStorage (adjust if backend returns JWT or session token)
-      if (data.token) {
-        localStorage.setItem('token', data.token);
+      if (data.access_token) {
+        localStorage.setItem('token', data.access_token);
       }
 
       navigate('/home'); // or dashboard or wherever
