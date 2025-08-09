@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import logo from '../../public/assets/images/logopng.png';
+import logo from '../assets/images/logopng.png';
 
 interface FormData {
   name: string;
