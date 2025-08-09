@@ -52,7 +52,7 @@ function SignUpScreen() {
 
     setLoading(true);
     try {
-      const response = await fetch('https://your-backend-domain.com/api/auth/signup', {
+      const response = await fetch('https://docufy-backend.vercel.app/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

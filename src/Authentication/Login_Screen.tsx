@@ -30,7 +30,7 @@ function LoginScreen() {
 
     setLoading(true);
     try {
-      const response = await fetch('https://your-backend-domain.com/api/auth/login', {
+      const response = await fetch('docufy-backend.vercel.app', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
