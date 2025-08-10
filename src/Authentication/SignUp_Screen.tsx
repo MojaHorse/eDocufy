@@ -64,7 +64,7 @@ function SignUpScreen() {
         .from('citizens')
         .select('*')
         .eq('national_id_no', form.idNumber.trim())
-        .eq('surname', form.surname.trim()) // adjust column if needed
+        .eq('last_name', form.surname.trim()) // adjust column if needed
         .maybeSingle();
 
       if (citizenError) {
@@ -95,7 +95,7 @@ function SignUpScreen() {
       if (signUpError) throw signUpError;
 
       if (signUpData.user) {
-        // Call the RPC procedure to insert user link
+
         const { error: rpcError } = await supabase.rpc('insert_user_link', {
           p_user_id: signUpData.user.id,
           p_national_id_no: form.idNumber,
