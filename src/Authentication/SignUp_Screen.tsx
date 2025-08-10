@@ -60,7 +60,21 @@ function SignUpScreen() {
     try {
       const email = `user${form.idNumber}@gmail.com`;
 
-      const { data, error } = await supabase.auth.signUp({
+      // 1️⃣ Check if ID number exists in citizens table
+      const { data: citizen, error: citizenError } = await supabase
+        .from('citizens')
+        .select('*')
+        .eq('national_id_no', form.idNumber)
+        .single();
+
+      if (citizenError || !citizen) {
+        setError('ID number not found in our records.');
+        setLoading(false);
+        return;
+      }
+
+      // 2️⃣ Create user in auth with metadata
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password: form.password,
         options: {
@@ -68,22 +82,40 @@ function SignUpScreen() {
             name: form.name,
             surname: form.surname,
             idNumber: form.idNumber,
-            phone: form.phone,
+            phone: form.phone, // phone will be stored in metadata of auth.users
           },
         },
       });
 
-      if (error) throw error;
+      if (signUpError) throw signUpError;
+
+      // 3️⃣ Insert into public.users table
+      if (signUpData.user) {
+        const { error: insertError } = await supabase.from('users').insert({
+          user_id: signUpData.user.id,
+          citizen_id: citizen.citizen_id,
+          email,
+          phone: form.phone,
+        });
+
+        if (insertError) {
+          console.error(insertError);
+          setError('User created but failed to link with public.users.');
+          setLoading(false);
+          return;
+        }
+      }
 
       alert('Registration successful! Please check your email to confirm.');
-
       navigate('/login');
     } catch (err: any) {
+      console.error(err);
       setError(err.message || 'Registration failed.');
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="flex h-screen w-full font-sans">
