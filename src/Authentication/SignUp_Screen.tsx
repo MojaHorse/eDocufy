@@ -67,7 +67,7 @@ function SignUpScreen() {
         .maybeSingle();
 
       if (citizenError || !citizen) {
-        setError('No matching record found for the entered ID');
+        setError('No matching record found for the entered ID!');
         setLoading(false);
         return;
       }
