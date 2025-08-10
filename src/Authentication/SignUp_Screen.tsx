@@ -63,11 +63,17 @@ function SignUpScreen() {
       const { data: citizen, error: citizenError } = await supabase
         .from('citizens')
         .select('*')
-        .eq('national_id_no', form.idNumber)
+        .eq('national_id_no', form.idNumber.trim())
         .maybeSingle();
 
+      if (citizenError) {
+        setError('Failed to verify ID number. Please try again.');
+        setLoading(false);
+        return;
+      }
+
       if (!citizen) {
-        setError('ID number not found in our records.');
+        setError('ID number not found in our records!');
         setLoading(false);
         return;
       }
