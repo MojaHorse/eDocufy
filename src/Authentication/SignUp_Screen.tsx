@@ -60,14 +60,13 @@ function SignUpScreen() {
     try {
       const email = `user${form.idNumber}@gmail.com`;
 
-      // 1️⃣ Check if ID number exists in citizens table
       const { data: citizen, error: citizenError } = await supabase
         .from('citizens')
         .select('*')
         .eq('national_id_no', form.idNumber)
-        .eq('first_name', form.name.trim().charAt(0).toUpperCase() + form.name.trim().slice(1).toLowerCase())
-        .eq('last_name', form.surname.trim().charAt(0).toUpperCase() + form.surname.trim().slice(1).toLowerCase())
-        .single();
+        .eq('first_name', form.name.trim())
+        .eq('last_name', form.surname.trim())
+        .maybeSingle();
 
       if (citizenError || !citizen) {
         setError('No matching record found for the entered ID, name, and surname.');
@@ -75,7 +74,6 @@ function SignUpScreen() {
         return;
       }
 
-      // 2️⃣ Create user in auth with metadata
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password: form.password,
