@@ -63,7 +63,7 @@ function SignUpScreen() {
       const { data: citizen, error: citizenError } = await supabase
         .from('citizens')
         .select('*')
-        .eq('national_id_no', form.idNumber.trim())
+        .eq('first_name', form.name.trim())
         .maybeSingle();
 
       if (citizenError) {
