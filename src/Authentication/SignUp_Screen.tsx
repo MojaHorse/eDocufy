@@ -63,9 +63,8 @@ function SignUpScreen() {
       const { data: citizen, error: citizenError } = await supabase
         .from('citizens')
         .select('*')
-        .eq('first_name', form.idNumber.trim())
-        .eq('last_name', form.surname.trim())
-        .eq('first_name', form.name.trim())
+        .eq('national_id_no', form.idNumber.trim())
+        .eq('surname', form.surname.trim()) // adjust column if needed
         .maybeSingle();
 
       if (citizenError) {
@@ -88,7 +87,7 @@ function SignUpScreen() {
             name: form.name,
             surname: form.surname,
             idNumber: form.idNumber,
-            phone: form.phone, // phone will be stored in metadata of auth.users
+            phone: form.phone,
           },
         },
       });
@@ -96,16 +95,17 @@ function SignUpScreen() {
       if (signUpError) throw signUpError;
 
       if (signUpData.user) {
-        const { error: insertError } = await supabase.from('users').insert({
-          user_id: signUpData.user.id,
-          citizen_id: citizen.citizen_id,
-          email,
-          phone: form.phone,
+        // Call the RPC procedure to insert user link
+        const { error: rpcError } = await supabase.rpc('insert_user_link', {
+          p_user_id: signUpData.user.id,
+          p_national_id_no: form.idNumber,
+          p_passport_no: null,
+          p_email: email,
+          p_phone: form.phone,
         });
 
-        if (insertError) {
-          console.error('Insert user error:', insertError);
-          setError(`User created but failed to link with public.users: ${insertError.message}`);
+        if (rpcError) {
+          setError(`User created but failed to link: ${rpcError.message}`);
           setLoading(false);
           return;
         }
@@ -120,6 +120,7 @@ function SignUpScreen() {
       setLoading(false);
     }
   };
+
 
 
   return (
