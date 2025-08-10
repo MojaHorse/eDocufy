@@ -96,6 +96,7 @@ function SignUpScreen() {
 
       if (signUpData.user) {
 
+
         const { error: rpcError } = await supabase.rpc('insert_user_link', {
           p_user_id: signUpData.user.id,
           p_national_id_no: form.idNumber,
