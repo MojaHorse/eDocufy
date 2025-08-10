@@ -65,10 +65,12 @@ function SignUpScreen() {
         .from('citizens')
         .select('*')
         .eq('national_id_no', form.idNumber)
+        .ilike('first_name', form.name.trim())
+        .ilike('last_name', form.surname.trim())
         .single();
 
       if (citizenError || !citizen) {
-        setError('ID number not found in our records.');
+        setError('No matching record found for the entered ID, name, and surname.');
         setLoading(false);
         return;
       }
