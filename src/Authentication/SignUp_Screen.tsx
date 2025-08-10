@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { createClient } from '@supabase/supabase-js';
 import logo from '../assets/images/logopng.png';
+
+export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL!;
+export const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 interface FormData {
   name: string;
@@ -35,7 +41,6 @@ function SignUpScreen() {
     if (!name || !surname || !idNumber || !phone || !password || !confirmPassword)
       return 'Please fill in all fields.';
     if (!/^\d{13}$/.test(idNumber)) return 'ID Number must be 13 digits.';
-    // Add more validation if needed
     if (!/^\+?\d{10,15}$/.test(phone)) return 'Invalid phone number.';
     if (password.length < 8) return 'Password must be at least 8 characters.';
     if (password !== confirmPassword) return 'Passwords do not match.';
@@ -51,24 +56,26 @@ function SignUpScreen() {
     }
 
     setLoading(true);
+
     try {
-      const response = await fetch('https://docufy-backend.vercel.app/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          surname: form.surname,
-          idNumber: form.idNumber,
-          phone: form.phone,
-          password: form.password,
-        }),
+      const email = `user${form.idNumber}@example.com`;
+
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: form.password,
+        options: {
+          data: {
+            name: form.name,
+            surname: form.surname,
+            idNumber: form.idNumber,
+            phone: form.phone,
+          },
+        },
       });
 
-      const data = await response.json();
+      if (error) throw error;
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed.');
-      }
+      alert('Registration successful! Please check your email to confirm.');
 
       navigate('/login');
     } catch (err: any) {

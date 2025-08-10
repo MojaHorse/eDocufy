@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { createClient } from '@supabase/supabase-js';
 import logo from '../assets/images/logopng.png';
+
+export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL!;
+export const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 function LoginScreen() {
   const [form, setForm] = useState({ idNumber: '', password: '' });
@@ -17,7 +23,6 @@ function LoginScreen() {
     const { idNumber, password } = form;
     if (!idNumber || !password) return 'Please fill in all fields.';
     if (!/^\d{13}$/.test(idNumber)) return 'ID must be 13 digits.';
-    // Add more validation if needed
     return null;
   };
 
@@ -30,29 +35,24 @@ function LoginScreen() {
 
     setLoading(true);
     try {
-      const response = await fetch('https://docufy-backend.vercel.app/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          idNumber: form.idNumber,
-          password: form.password,
-        }),
+      const email = `user${form.idNumber}@example.com`; // same email pattern as signup
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password: form.password,
       });
 
-      const data = await response.json();
+      if (error) throw error;
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed.');
+      // Save access token or session in localStorage or context as needed
+      if (data.session?.access_token) {
+        localStorage.setItem('token', data.session.access_token);
       }
 
-      // Save token/session to localStorage (adjust if backend returns JWT or session token)
-      if (data.access_token) {
-        localStorage.setItem('token', data.access_token);
-      }
-
-      navigate('/home'); // or dashboard or wherever
+      // Navigate to your app's home/dashboard page
+      navigate('/home');
     } catch (err: any) {
-      setError(err.message || 'Login failed. Check ID and password.');
+      setError(err.message || 'Login failed. Check your ID and password.');
     } finally {
       setLoading(false);
     }
