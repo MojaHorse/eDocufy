@@ -65,8 +65,8 @@ function SignUpScreen() {
         .from('citizens')
         .select('*')
         .eq('national_id_no', form.idNumber)
-        .ilike('first_name', form.name.trim())
-        .ilike('last_name', form.surname.trim())
+        .eq('first_name', form.name.trim().charAt(0).toUpperCase() + form.name.trim().slice(1).toLowerCase())
+        .eq('last_name', form.surname.trim().charAt(0).toUpperCase() + form.surname.trim().slice(1).toLowerCase())
         .single();
 
       if (citizenError || !citizen) {
