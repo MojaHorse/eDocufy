@@ -63,6 +63,8 @@ function SignUpScreen() {
       const { data: citizen, error: citizenError } = await supabase
         .from('citizens')
         .select('*')
+        .eq('first_name', form.idNumber.trim())
+        .eq('last_name', form.surname.trim())
         .eq('first_name', form.name.trim())
         .maybeSingle();
 
@@ -102,8 +104,8 @@ function SignUpScreen() {
         });
 
         if (insertError) {
-          console.error(insertError);
-          setError('User created but failed to link with public.users.');
+          console.error('Insert user error:', insertError);
+          setError(`User created but failed to link with public.users: ${insertError.message}`);
           setLoading(false);
           return;
         }
