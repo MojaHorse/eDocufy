@@ -35,7 +35,7 @@ function LoginScreen() {
 
     setLoading(true);
     try {
-      const email = `user${form.idNumber}@example.com`; // same email pattern as signup
+      const email = `user${form.idNumber}@gmail.com`; // same email pattern as signup
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
