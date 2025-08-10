@@ -64,12 +64,10 @@ function SignUpScreen() {
         .from('citizens')
         .select('*')
         .eq('national_id_no', form.idNumber)
-        .eq('first_name', form.name.trim())
-        .eq('last_name', form.surname.trim())
         .maybeSingle();
 
       if (citizenError || !citizen) {
-        setError('No matching record found for the entered ID, name, and surname.');
+        setError('No matching record found for the entered ID');
         setLoading(false);
         return;
       }
@@ -89,7 +87,6 @@ function SignUpScreen() {
 
       if (signUpError) throw signUpError;
 
-      // 3️⃣ Insert into public.users table
       if (signUpData.user) {
         const { error: insertError } = await supabase.from('users').insert({
           user_id: signUpData.user.id,
