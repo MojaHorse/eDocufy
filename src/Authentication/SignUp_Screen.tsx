@@ -66,8 +66,8 @@ function SignUpScreen() {
         .eq('national_id_no', form.idNumber)
         .maybeSingle();
 
-      if (citizenError || !citizen) {
-        setError('No matching record found for the entered ID!');
+      if (!citizen) {
+        setError('ID number not found in our records.');
         setLoading(false);
         return;
       }
