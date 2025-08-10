@@ -3,10 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
 import logo from '../assets/images/logopng.png';
 
-export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL!;
-export const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+)
 
 interface FormData {
   name: string;
