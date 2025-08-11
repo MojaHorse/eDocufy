@@ -6,7 +6,7 @@ import logo from '../assets/images/logopng.png';
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY
-)
+);
 
 function LoginScreen() {
   const [form, setForm] = useState({ idNumber: '', password: '' });
@@ -22,7 +22,14 @@ function LoginScreen() {
   const validateForm = () => {
     const { idNumber, password } = form;
     if (!idNumber || !password) return 'Please fill in all fields.';
-    if (!/^\d{13}$/.test(idNumber)) return 'ID must be 13 digits.';
+
+    const isID = /^\d{13}$/.test(idNumber);
+    const isPassport = /^A\d{7}$/.test(idNumber);
+
+    if (!isID && !isPassport) {
+      return 'Enter a valid SA ID (13 digits) or Passport (A followed by 7 digits).';
+    }
+
     return null;
   };
 
@@ -35,7 +42,8 @@ function LoginScreen() {
 
     setLoading(true);
     try {
-      const email = `user${form.idNumber}@gmail.com`; // same email pattern as signup
+      // Same email pattern as signup
+      const email = `user${form.idNumber}@gmail.com`;
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -44,15 +52,14 @@ function LoginScreen() {
 
       if (error) throw error;
 
-      // Save access token or session in localStorage or context as needed
+      // Save session token if needed
       if (data.session?.access_token) {
         localStorage.setItem('token', data.session.access_token);
       }
 
-      // Navigate to your app's home/dashboard page
       navigate('/home');
     } catch (err: any) {
-      setError(err.message || 'Login failed. Check your ID and password.');
+      setError(err.message || 'Login failed. Check your ID/Passport and password.');
     } finally {
       setLoading(false);
     }
@@ -83,7 +90,7 @@ function LoginScreen() {
 
         <input
           name="idNumber"
-          placeholder="ID Number"
+          placeholder="ID Number or Passport"
           className="w-full mb-4 px-4 py-3 rounded-lg bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
           value={form.idNumber}
           onChange={handleChange}

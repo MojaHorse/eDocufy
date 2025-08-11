@@ -38,12 +38,26 @@ function SignUpScreen() {
 
   const validateForm = () => {
     const { name, surname, idNumber, phone, password, confirmPassword } = form;
+
     if (!name || !surname || !idNumber || !phone || !password || !confirmPassword)
       return 'Please fill in all fields.';
-    if (!/^\d{13}$/.test(idNumber)) return 'ID Number must be 13 digits.';
-    if (!/^\+?\d{10,15}$/.test(phone)) return 'Invalid phone number.';
-    if (password.length < 8) return 'Password must be at least 8 characters.';
-    if (password !== confirmPassword) return 'Passwords do not match.';
+
+    // Check ID number or passport
+    const isID = /^\d{13}$/.test(idNumber);
+    const isPassport = /^A\d{7}$/.test(idNumber);
+
+    if (!isID && !isPassport)
+      return 'Please enter a valid SA ID (13 digits) or Passport (A followed by 7 digits).';
+
+    if (!/^\+?\d{10,15}$/.test(phone))
+      return 'Invalid phone number.';
+
+    if (password.length < 8)
+      return 'Password must be at least 8 characters.';
+
+    if (password !== confirmPassword)
+      return 'Passwords do not match.';
+
     return null;
   };
 
@@ -59,26 +73,30 @@ function SignUpScreen() {
 
     try {
       const email = `user${form.idNumber}@gmail.com`;
+      const isID = /^\d{13}$/.test(form.idNumber);
+      const columnToCheck = isID ? 'national_id_no' : 'passport_no';
 
+      // 1️⃣ Check in citizens table
       const { data: citizen, error: citizenError } = await supabase
         .from('citizens')
         .select('*')
-        .eq('national_id_no', form.idNumber.trim())
-        .eq('last_name', form.surname.trim()) // adjust column if needed
+        .eq(columnToCheck, form.idNumber.trim())
+        .ilike('last_name', form.surname.trim())
         .maybeSingle();
 
       if (citizenError) {
-        setError('Failed to verify ID number. Please try again.');
+        setError('Failed to verify ID/Passport. Please try again.');
         setLoading(false);
         return;
       }
 
       if (!citizen) {
-        setError('ID number not found in our records!');
+        setError('ID/Passport not found or surname does not match.');
         setLoading(false);
         return;
       }
 
+      // 2️⃣ Create user in auth.users
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password: form.password,
@@ -86,7 +104,8 @@ function SignUpScreen() {
           data: {
             name: form.name,
             surname: form.surname,
-            idNumber: form.idNumber,
+            idNumber: isID ? form.idNumber : null,
+            passportNo: !isID ? form.idNumber : null,
             phone: form.phone,
           },
         },
@@ -94,19 +113,20 @@ function SignUpScreen() {
 
       if (signUpError) throw signUpError;
 
+      // 3️⃣ Insert into public.users
       if (signUpData.user) {
+        const { error: insertError } = await supabase
+          .from('users')
+          .insert([{
+            user_id: signUpData.user.id,
+            national_id_no: isID ? form.idNumber : null,
+            passport_no: !isID ? form.idNumber : null,
+            email,
+            phone: form.phone,
+          }]);
 
-
-        const { error: rpcError } = await supabase.rpc('insert_user_link', {
-          p_user_id: signUpData.user.id,
-          p_national_id_no: form.idNumber,
-          p_passport_no: null,
-          p_email: email,
-          p_phone: form.phone,
-        });
-
-        if (rpcError) {
-          setError(`User created but failed to link: ${rpcError.message}`);
+        if (insertError) {
+          setError(`User created but failed to link: ${insertError.message}`);
           setLoading(false);
           return;
         }
@@ -114,6 +134,7 @@ function SignUpScreen() {
 
       alert('Registration successful! Please check your email to confirm.');
       navigate('/login');
+
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Registration failed.');
@@ -121,8 +142,6 @@ function SignUpScreen() {
       setLoading(false);
     }
   };
-
-
 
   return (
     <div className="flex h-screen w-full font-sans">
