@@ -121,7 +121,6 @@ function SignUpScreen() {
             user_id: signUpData.user.id,
             national_id_no: isID ? form.idNumber : null,
             passport_no: !isID ? form.idNumber : null,
-            email,
             phone: form.phone,
           }]);
 
